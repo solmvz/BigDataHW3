@@ -5,7 +5,6 @@ import time
 import random
 import sys
 import math
-from time import perf_counter
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -58,6 +57,32 @@ def main():
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # AUXILIARY METHODS
+def minDistance(P, n):
+    subset = np.array(P[:n])
+    min_d = float('inf')
+    while len(subset):
+        i = subset[0]
+        subset=np.delete(subset,0,0)
+        for j in subset:
+            #current_d = euclidean(i, j)
+            current_d = np.sqrt(np.sum(np.square(i - j)))
+
+            if  current_d < min_d:
+                min_d = current_d
+    # print(min_d)
+    return min_d / 2
+
+def weightInRadius(point_array, weight_array, x, x_w, op):
+    # we used the np to make this step more efficient
+    # we firstly compute the euclidean distances from x to all the point in point_array
+    euclidean_distance = np.sqrt(np.sum(np.square(point_array - x), 1))
+
+    # we find the indeces of the point that are inside the first ball
+    indeces = np.where(euclidean_distance < op)
+
+    #we get the weight of those points and we remove
+    #the weight of x
+    return weight_array[indeces].sum() - x_w
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
@@ -84,8 +109,12 @@ def squaredEuclidean(point1, point2):
 # Method euclidean:  euclidean distance
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 def euclidean(point1, point2):
-    dist = [(a - b) ** 2 for a, b in zip(point1, point2)]
-    return math.sqrt(sum(dist))
+    res = 0
+    for i in range(len(point1)):
+        diff = (point1[i] - point2[i])
+        res += diff * diff
+    return math.sqrt(res)
+
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method MR_kCenterOutliers: MR algorithm for k-center with outliers
@@ -106,12 +135,11 @@ def MR_kCenterOutliers(points, k, z, L):
         coresetPoints.append(i[0])
         coresetWeights.append(i[1])
 
-    solution = SeqWeightedOutliers(coresetPoints,coresetWeights,k,z,alpha=2)
     # ****** ADD YOUR CODE
     # ****** Compute the final solution (run SeqWeightedOutliers with alpha=2)
     # ****** Measure and print times taken by Round 1 and Round 2, separately
     # ****** Return the final solution
-    return solution
+
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method extractCoreset: extract a coreset from a given iterator
@@ -152,6 +180,7 @@ def kCenterFFT(points, k):
     return centers
 
 
+
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method computeWeights: compute weights of coreset points
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -168,32 +197,7 @@ def computeWeights(points, centers):
         weights[mycenter] = weights[mycenter] + 1
     return weights
 
-def minDistance(P, n):
-    subset = np.array(P[:n])
-    min_d = float('inf')
-    while len(subset):
-        i = subset[0]
-        subset=np.delete(subset,0,0)
-        for j in subset:
-            #current_d = euclidean(i, j)
-            current_d = np.sqrt(np.sum(np.square(i - j)))
 
-            if  current_d < min_d:
-                min_d = current_d
-    # print(min_d)
-    return min_d / 2
-
-def weightInRadius(point_array, weight_array, x, x_w, op):
-    # we used the np to make this step more efficient
-    # we firstly compute the euclidean distances from x to all the point in point_array
-    euclidean_distance = np.sqrt(np.sum(np.square(point_array - x), 1))
-
-    # we find the indeces of the point that are inside the first ball
-    indeces = np.where(euclidean_distance < op)
-
-    #we get the weight of those points and we remove
-    #the weight of x
-    return weight_array[indeces].sum() - x_w
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -259,11 +263,10 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
     return S, r_init, r, num_iter
 
-
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method computeObjective: computes objective function
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-def ComputeObjective(P, S, z):
+def computeObjective(P, S, z):
     # At first we compute for each point the closest center.
     # for each point we save:
     # - the distance to the closest center
@@ -301,6 +304,11 @@ def ComputeObjective(P, S, z):
         objective_value = max(objective_value, max_distances[center])
 
     return objective_value
+
+
+#
+# ****** ADD THE CODE FOR SeqWeightedOuliers from HW2
+#
 
 
 # Just start the main program
