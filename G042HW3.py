@@ -5,6 +5,15 @@ import time
 import random
 import sys
 import math
+from pyspark import SparkContext, SparkConf
+import random as rand
+import psutil
+import os
+import sys
+from pyspark.sql import SparkSession
+
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -15,6 +24,10 @@ import math
 def main():
     # Checking number of cmd line parameters
     assert len(sys.argv) == 5, "Usage: python Homework3.py filepath k z L"
+
+    # Spark setup
+    #conf = SparkConf().setAppName('HomeWork3').setMaster("local[*]")
+    #sc = SparkContext(conf=conf)
 
     # Initialize variables
     filename = sys.argv[1]
@@ -47,8 +60,9 @@ def main():
     solution = MR_kCenterOutliers(inputPoints, k, z, L)
 
     # Compute the value of the objective function
+    print(solution)
     start = time.time()
-    objective = computeObjective(inputPoints, solution, z)
+    objective = computeObjective(inputPoints, solution, z, L)
     end = time.time()
     print("Objective function = ", objective)
     print("Time to compute objective function: ", str((end - start) * 1000), " ms")
@@ -139,10 +153,14 @@ def MR_kCenterOutliers(points, k, z, L):
     # ****** Compute the final solution (run SeqWeightedOutliers with alpha=2)
     # ****** Measure and print times taken by Round 1 and Round 2, separately
     # ****** Return the final solution
+    return SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)[0]
+
+
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method extractCoreset: extract a coreset from a given iterator
+
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 def extractCoreset(iter, points):
     partition = list(iter)
@@ -266,7 +284,12 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method computeObjective: computes objective function
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-def computeObjective(P, S, z):
+def computeObjective(P, S, z, l):
+    return min(P.repartition(numPartitions=l)
+               .mapPartitions(lambda Pi: computeObjectiveAux(Pi, S, z+1))
+               .top(z+1))
+
+def computeObjectiveAux(P, S, n):
     # At first we compute for each point the closest center.
     # for each point we save:
     # - the distance to the closest center
@@ -280,30 +303,12 @@ def computeObjective(P, S, z):
             if min_distance > distance:
                 min_distance = distance
                 closest_center = center
-        distances.append((min_distance, closest_center))
+        distances.append(min_distance)
 
     # We sort the list on the distances
-    distances = sorted(distances, key=lambda couple: couple[0])
+    distances = sorted(distances, reverse=True)
 
-    # We pop the list z times to remove the top z distances
-    for i in range(z):
-        distances.pop()
-
-    # We save for each center the maximum distance
-    max_distances = {}
-    for center in S:
-        max_distances[center] = 0
-
-    for distance, center in distances:
-        max_distances[center] = max(max_distances[center], distance)
-
-    # The sum of the maximum distances between the center of a cluster and the point
-    # in the same cluster is the objective value
-    objective_value = 0
-    for center in max_distances:
-        objective_value = max(objective_value, max_distances[center])
-
-    return objective_value
+    return [dist for dist in distances[0:n]]
 
 
 #
