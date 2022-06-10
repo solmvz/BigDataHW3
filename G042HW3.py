@@ -82,7 +82,7 @@ def weightInRadius(point_array, weight_array, x, x_w, op):
 
     #we get the weight of those points and we remove
     #the weight of x
-    return weight_array[indeces].sum() - x_w
+    return weight_array[indeces].sum()
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
@@ -139,7 +139,7 @@ def MR_kCenterOutliers(points, k, z, L):
     # ****** Compute the final solution (run SeqWeightedOutliers with alpha=2)
     # ****** Measure and print times taken by Round 1 and Round 2, separately
     # ****** Return the final solution
-    return SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)[0]
+    return SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)
 
 
 
@@ -265,16 +265,15 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
             r = 2 * r
             num_iter += 1
 
-    return S, r_init, r, num_iter
+    return S
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method computeObjective: computes objective function
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 def computeObjective(P, S, z):
-    return min(P.mapPartitions(lambda Pi: computeObjectiveAux(Pi, S, z+1))
-               .top(z+1))
+    return min(P.mapPartitions(lambda Pi: computeObjectiveAux(Pi, S, z)).top(z+1))
 
-def computeObjectiveAux(P, S, n):
+def computeObjectiveAux(P, S, z):
     # At first we compute for each point the closest center.
     # for each point we save:
     # - the distance to the closest center
@@ -293,7 +292,7 @@ def computeObjectiveAux(P, S, n):
     # We sort the list on the distances
     distances = sorted(distances, reverse=True)
 
-    return [dist for dist in distances[0:n-1]]
+    return [dist for dist in distances[0:z]]
 
 
 #
