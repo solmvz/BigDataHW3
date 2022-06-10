@@ -5,15 +5,6 @@ import time
 import random
 import sys
 import math
-from pyspark import SparkContext, SparkConf
-import random as rand
-import psutil
-import os
-import sys
-from pyspark.sql import SparkSession
-
-os.environ['PYSPARK_PYTHON'] = sys.executable
-os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
@@ -24,10 +15,6 @@ os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 def main():
     # Checking number of cmd line parameters
     assert len(sys.argv) == 5, "Usage: python Homework3.py filepath k z L"
-
-    # Spark setup
-    #conf = SparkConf().setAppName('HomeWork3').setMaster("local[*]")
-    #sc = SparkContext(conf=conf)
 
     # Initialize variables
     filename = sys.argv[1]
@@ -60,9 +47,8 @@ def main():
     solution = MR_kCenterOutliers(inputPoints, k, z, L)
 
     # Compute the value of the objective function
-    print(solution)
     start = time.time()
-    objective = computeObjective(inputPoints, solution, z, L)
+    objective = computeObjective(inputPoints, solution, z)
     end = time.time()
     print("Objective function = ", objective)
     print("Time to compute objective function: ", str((end - start) * 1000), " ms")
@@ -284,9 +270,8 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method computeObjective: computes objective function
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-def computeObjective(P, S, z, l):
-    return min(P.repartition(numPartitions=l)
-               .mapPartitions(lambda Pi: computeObjectiveAux(Pi, S, z+1))
+def computeObjective(P, S, z):
+    return min(P.mapPartitions(lambda Pi: computeObjectiveAux(Pi, S, z+1))
                .top(z+1))
 
 def computeObjectiveAux(P, S, n):
@@ -308,7 +293,7 @@ def computeObjectiveAux(P, S, n):
     # We sort the list on the distances
     distances = sorted(distances, reverse=True)
 
-    return [dist for dist in distances[0:n]]
+    return [dist for dist in distances[0:n-1]]
 
 
 #
