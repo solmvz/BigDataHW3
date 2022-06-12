@@ -300,7 +300,7 @@ def computeObjectiveAux(P, S, z):
     # We sort the list on the distances
     distances.sort(reverse=True)
 
-    return [dist for dist in distances[0:z+1]]
+    return distances[0:z+1]
 
 
 #
