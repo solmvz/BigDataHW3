@@ -70,12 +70,10 @@ def minDistance(P, n):
         i = subset[0]
         subset=np.delete(subset,0,0)
         for j in subset:
-            #current_d = euclidean(i, j)
             current_d = np.sqrt(np.sum(np.square(i - j)))
 
             if  current_d < min_d:
                 min_d = current_d
-    # print(min_d)
     return min_d / 2
 
 def weightInRadius(point_array, weight_array, x, x_w, op):
@@ -216,7 +214,6 @@ def computeWeights(points, centers):
 def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     #we compute the first circle base radious
     r = minDistance(inputPoints, k + z + 1)
-    r_init = r;
     num_iter = 1
     while True:
         # To make the this function more efficient we are going to use Numpy arrays
