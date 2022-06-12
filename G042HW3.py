@@ -277,6 +277,10 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 # Method computeObjective: computes objective function
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 def computeObjective(P, S, z):
+    #To make this 2 round map reduce version of computeObjective we first divide in l partition (P is already Partitioned at before the methods call)
+    #First round, for each partition of points we find the z+1 top distances from point in the partition to the closest center
+    #We merge all those L*(Z+1) distances and we select the Top (Z+1). Now the minimun distances out of these will be the
+    #objective function values
     return min(P.mapPartitions(lambda Pi: computeObjectiveAux(Pi, S, z)).top(z+1))
 
 def computeObjectiveAux(P, S, z):
@@ -298,7 +302,7 @@ def computeObjectiveAux(P, S, z):
     # We sort the list on the distances
     distances = sorted(distances, reverse=True)
 
-    return [dist for dist in distances[0:z]]
+    return [dist for dist in distances[0:z+1]]
 
 
 #
