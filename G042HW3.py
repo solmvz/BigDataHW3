@@ -291,16 +291,14 @@ def computeObjectiveAux(P, S, z):
     distances = []
     for point in P:
         min_distance = float('inf')
-        closest_center = None
         for center in S:
             distance = euclidean(point, center)
             if min_distance > distance:
                 min_distance = distance
-                closest_center = center
         distances.append(min_distance)
 
     # We sort the list on the distances
-    distances = sorted(distances, reverse=True)
+    distances.sort(reverse=True)
 
     return [dist for dist in distances[0:z+1]]
 
