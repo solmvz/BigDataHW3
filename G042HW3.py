@@ -1,10 +1,16 @@
 # Import Packages
-from pyspark import SparkConf, SparkContext
 import numpy as np
 import time
 import random
-import sys
 import math
+
+from pyspark import SparkContext, SparkConf
+import os
+import sys
+
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+
 
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
