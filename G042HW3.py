@@ -50,10 +50,13 @@ def main():
     print("Time to read from file: ", str((end - start) * 1000), " ms")
 
     # Solve the problem
-    solution, first_round, second_round = MR_kCenterOutliers(inputPoints, k, z, L)
+    solution, r_init, r_final, n_guesses, first_round, second_round = MR_kCenterOutliers(inputPoints, k, z, L)
 
-    print("Time for Round 1: ", str(first_round * 1000), " ms")
-    print("Time for Round 2: ", str(second_round * 1000), " ms")
+    print("Initial guess = ", r_init)
+    print("Final  guess = ", r_final)
+    print("Number of guesses = ", n_guesses)
+    print("Time Round 1: ", str(first_round * 1000), " ms")
+    print("Time Round 2: ", str(second_round * 1000), " ms")
 
     # Compute the value of the objective function
     start = time.time()
@@ -147,14 +150,14 @@ def MR_kCenterOutliers(points, k, z, L):
         coresetWeights.append(i[1])
 
     start = time.time()
-    solutions = SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)
+    solutions, r_init, r_final, n_guesses = SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)
     end = time.time()
     second_round = end - start
     # ****** ADD YOUR CODE
     # ****** Compute the final solution (run SeqWeightedOutliers with alpha=2)
     # ****** Measure and print times taken by Round 1 and Round 2, separately
     # ****** Return the final solution
-    return solutions, first_round, second_round
+    return solutions, r_init, r_final, n_guesses , first_round, second_round
 
 
 
@@ -225,6 +228,7 @@ def computeWeights(points, centers):
 def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     #we compute the first circle base radious
     r = minDistance(inputPoints, k + z + 1)
+    r_init = r
     num_iter = 1
     while True:
         # To make the this function more efficient we are going to use Numpy arrays
@@ -279,7 +283,7 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
             r = 2 * r
             num_iter += 1
 
-    return S
+    return S, r_init, r, num_iter
 
 # &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 # Method computeObjective: computes objective function
