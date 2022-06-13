@@ -50,7 +50,10 @@ def main():
     print("Time to read from file: ", str((end - start) * 1000), " ms")
 
     # Solve the problem
-    solution = MR_kCenterOutliers(inputPoints, k, z, L)
+    solution, first_round, second_round = MR_kCenterOutliers(inputPoints, k, z, L)
+
+    print("Time for Round 1: ", str(first_round * 1000), " ms")
+    print("Time for Round 2: ", str(second_round * 1000), " ms")
 
     # Compute the value of the objective function
     start = time.time()
@@ -126,24 +129,32 @@ def euclidean(point1, point2):
 def MR_kCenterOutliers(points, k, z, L):
     # ------------- ROUND 1 ---------------------------
 
-    coreset = points.mapPartitions(lambda iterator: extractCoreset(iterator, k + z + 1))
 
+    start = time.time()
+    coreset = points.mapPartitions(lambda iterator: extractCoreset(iterator, k + z + 1))
+    elems = coreset.collect()
+    end = time.time()
+    first_round = end - start
     # END OF ROUND 1
 
     # ------------- ROUND 2 ---------------------------
 
-    elems = coreset.collect()
+
     coresetPoints = list()
     coresetWeights = list()
     for i in elems:
         coresetPoints.append(i[0])
         coresetWeights.append(i[1])
 
+    start = time.time()
+    solutions = SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)
+    end = time.time()
+    second_round = end - start
     # ****** ADD YOUR CODE
     # ****** Compute the final solution (run SeqWeightedOutliers with alpha=2)
     # ****** Measure and print times taken by Round 1 and Round 2, separately
     # ****** Return the final solution
-    return SeqWeightedOutliers(coresetPoints, coresetWeights, k, z, 2)
+    return solutions, first_round, second_round
 
 
 
